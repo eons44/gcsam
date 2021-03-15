@@ -1,7 +1,7 @@
 import xlrd
 from xlrd import open_workbook
 import xlsxwriter
-from sampleManagement import *
+from .sampleManagement import *
 
 # Excel Helpers is a collection of helper functions that interact with the specific excel documents the user will have.
 # This file is highly malleable and should be adjusted to suit the needs of the user.

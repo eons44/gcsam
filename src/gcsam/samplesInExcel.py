@@ -1,8 +1,8 @@
 import xlrd
 from xlrd import open_workbook
 import xlsxwriter
-from sampleManagement import *
-from excelHelpers import *
+from .sampleManagement import *
+from .excelHelpers import *
 
 # Samples in Excel is a resource for any non-specific file interaction.
 # This file is responsible for all of the save and load mechanics in GC SAM.

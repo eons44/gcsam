@@ -1,4 +1,4 @@
-from sampleManagement import *
+from .sampleManagement import *
 import matplotlib.pyplot as plt
 import os
 import math
