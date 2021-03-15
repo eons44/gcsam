@@ -13,11 +13,12 @@ python >= 3.6.3
 python packages:
 * xlrd
 * xlsxwriter
+* matplotlib
 
 Microsoft Excel
 
 ## Installation
-`pip install gcsam` (coming soon, I hope!)
+`pip install gcsam`
 
 ## Usage
 Go take a look at the `example/` folder, which should have all you need to get started.
@@ -54,6 +55,8 @@ Outputs can be:
 * Graph visualization folder (`-g`).
 
 Specifying a standard is not required but you will likely want to include it with `--standard`. The default standard, "C17:0", may change in a future release.
+
+**NOTE: input and output formats are not currently supported. You only have one option and that is the default.**
 
 ### Examples
 
