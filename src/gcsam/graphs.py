@@ -1,4 +1,4 @@
-from plantManagement import *
+from sampleManagement import *
 import matplotlib.pyplot as plt
 import os
 import math
@@ -6,7 +6,7 @@ import math
 class GraphGenerator:
     m_lineManager = None
     m_directory = "graphs"
-    m_cachedPlants = []
+    m_cachedSamples = []
 
     def __init__(self, lineManager, directory="graphs"):
         self.m_lineManager = lineManager
@@ -16,15 +16,15 @@ class GraphGenerator:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-    def GetPlants(self):
-        if (not len(self.m_cachedPlants)):
-            self.m_cachedPlants = [p for l in self.m_lineManager.m_lines for p in l.m_plants]
-        return self.m_cachedPlants
+    def GetSamples(self):
+        if (not len(self.m_cachedSamples)):
+            self.m_cachedSamples = [s for l in self.m_lineManager.m_lines for s in l.m_samples]
+        return self.m_cachedSamples
 
     def GenerateGraphForTotalWeightFraction(self):
         # plt.style.use('ggplot')
-        plants = [p.m_name for p in self.GetPlants()]
-        twf = [p.m_totalWeightFraction for p in self.GetPlants()]
+        samples = [s.m_name for s in self.GetSamples()]
+        twf = [s.m_totalWeightFraction for s in self.GetSamples()]
 
         x_pos = [i for i, _ in enumerate(x)]
 
@@ -32,7 +32,7 @@ class GraphGenerator:
         plt.xlabel("Sample")
         plt.ylabel("Total Weight Fraction")
         plt.title("Total Weight Fractions")
-        plt.xticks(x_pos, plants, rotation = 90)
+        plt.xticks(x_pos, samples, rotation = 90)
         plt.tick_params(axis='x', which='major', labelsize=8)
         plt.tight_layout()
 
@@ -41,16 +41,16 @@ class GraphGenerator:
 
     def GenerateGraphForProfiles(self):
 
-        plants = self.GetPlants()
+        samples = self.GetSamples()
         columns = 5
-        fig, axs = plt.subplots(math.ceil(len(plants)/columns), columns)
+        fig, axs = plt.subplots(math.ceil(len(samples)/columns), columns)
         fig.set_size_inches(100,100)
-        for index, p in enumerate(plants):
+        for index, s in enumerate(samples):
             i = index-1
-            print(f"Generating pie chart {i} of {len(plants)-1}; r={math.ceil(i/columns)} c={i % columns}")
+            print(f"Generating pie chart {i} of {len(samples)-1}; r={math.ceil(i/columns)} c={i % columns}")
             axs[math.floor(i/columns), i % columns].pie(
-                [f.m_percentOfTotalFA for f in p.m_fames], 
-                labels=[f.m_name for f in p.m_fames],
+                [f.m_percentOfTotalFA for f in s.m_fames], 
+                labels=[f.m_name for f in s.m_fames],
                 autopct='%1.1f%%',
                 shadow=False, 
                 startangle=90,

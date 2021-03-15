@@ -1,7 +1,7 @@
 import xlrd
 from xlrd import open_workbook
 import xlsxwriter
-from plantManagement import *
+from sampleManagement import *
 
 # Excel Helpers is a collection of helper functions that interact with the specific excel documents the user will have.
 # This file is highly malleable and should be adjusted to suit the needs of the user.
@@ -12,7 +12,7 @@ from plantManagement import *
 
 
 #RETURNS: a LineManager with all of the Lines from the desired sheet of the desired xlsx file
-def ReadPlantsAndFAMEsFrom(xlsxName):
+def ReadSamplesAndFAMEsFrom(xlsxName):
     print("Reading in",xlsxName)
     wb = open_workbook(xlsxName)
 
@@ -21,48 +21,48 @@ def ReadPlantsAndFAMEsFrom(xlsxName):
     for sheet in wb.sheets():
         if(sheet.name != "Output" and sheet.name != "Config"):
             # print("Reading in",sheet.name,sheet.nrows,"x",sheet.ncols)
-            p = Plant()
-            # p.m_name = str(sheet.name)
-            p.m_name = str(sheet.cell(4,9).value)
-            lineName = p.m_name.split('-')[0]
+            s = Sample()
+            # s.m_name = str(sheet.name)
+            s.m_name = str(sheet.cell(4,9).value)
+            lineName = s.m_name.split('-')[0]
             l = lines.GetLine(lineName)
             if(not l.IsValid()):
                 l = Line()
                 l.m_name = lineName
                 # print("Created new line:", l.m_name)
                 lines.AddLine(l)
-            # print("Adding plant", p.m_name)
+            # print("Adding sample", s.m_name)
             for r in range(24,sheet.nrows):
                 if(sheet.cell_type(r,1) != xlrd.XL_CELL_EMPTY and sheet.cell_type(r,6) != xlrd.XL_CELL_EMPTY):
                     f = FAME()
                     f.m_retentionTime = float(sheet.cell(r,1).value)
                     f.m_peakArea = float(sheet.cell(r,3).value)
-                    p.AddFAME(f);
+                    s.AddFAME(f);
                     # print("Adding FAME",f.m_retentionTime,":",f.m_peakArea)
-            l.AddPlant(p)
+            l.AddSample(s)
     return lines
 
-#Reads in configXlsx and sets m_mgFADW and m_mgStd for each plant in the given lineManager according to the corresponding config entry.
+#Reads in configXlsx and sets m_mgFADW and m_mgStd for each sample in the given lineManager according to the corresponding config entry.
 def ApplyConfigTo(configXlsx,lineManager):
-    plantConfigured = False
+    sampleConfigured = False
     wb = open_workbook(configXlsx)
     for sheet in wb.sheets():
         if(sheet.name == "Config"):
             print("Reading samples from", configXlsx)
             for l in lineManager.m_lines:
-                for p in l.m_plants:
-                    plantConfigured = False
+                for s in l.m_samples:
+                    sampleConfigured = False
                     for r in range(1,sheet.nrows):
                         if(sheet.cell_type(r,0) == xlrd.XL_CELL_EMPTY):
                             break
-                        if(p.m_name == sheet.cell(r,0).value):
-                            p.m_mgFADW = float(sheet.cell(r,1).value)
-                            p.m_mgStd = float(sheet.cell(r,3).value)
-                            # print("Added mg:",p.m_mgFADW,"and std:",p.m_mgStd,"to",p.m_name)
-                            plantConfigured = True
+                        if(s.m_name == sheet.cell(r,0).value):
+                            s.m_mgFADW = float(sheet.cell(r,1).value)
+                            s.m_mgStd = float(sheet.cell(r,3).value)
+                            # print("Added mg:",s.m_mgFADW,"and std:",s.m_mgStd,"to",s.m_name)
+                            sampleConfigured = True
                             break
-                    if(not plantConfigured):
-                        print("No config entry found for",p.m_name)
+                    if(not sampleConfigured):
+                        print("No config entry found for",s.m_name)
             break
 
 #RETURNS: a FAMEsContainer with the standard FAMEs as provided in the specified excel sheet
@@ -87,26 +87,26 @@ def ReadLabeledFAMEsFrom(xlsxName):
             break
     return ret
 
-def Get18_2_to_3(plant):
-    p18_2 = plant.GetFAME("C18:2")
+def Get18_2_to_3(sample):
+    p18_2 = sample.GetFAME("C18:2")
     if not p18_2.IsValid():
-        print(plant.m_name, "has no valid C18:2")
+        print(sample.m_name, "has no valid C18:2")
         return 0
-    p18_3 = plant.GetFAME("C18:3")
+    p18_3 = sample.GetFAME("C18:3")
     if not p18_3.IsValid():
-        print(plant.m_name, "has no valid C18:3")
+        print(sample.m_name, "has no valid C18:3")
         return 0
     return p18_2.m_peakArea / p18_3.m_peakArea
 
-def Get18_2_and_20_0_and_22_1(plant):
+def Get18_2_and_20_0_and_22_1(sample):
     ret = 0
-    p18_2 = plant.GetFAME("C18:2")
+    p18_2 = sample.GetFAME("C18:2")
     if(p18_2.IsValid()):
         ret += p18_2.m_percentFA
-    p20_0 = plant.GetFAME("C20:0")
+    p20_0 = sample.GetFAME("C20:0")
     if(p20_0.IsValid()):
         ret += p20_0.m_percentFA
-    p22_1 = plant.GetFAME("C22:1")
+    p22_1 = sample.GetFAME("C22:1")
     if(p22_1.IsValid()):
         ret += p22_1.m_percentFA
     return ret
@@ -122,51 +122,51 @@ def WriteAnalysis(lineManager, xlsxName):
     xlOut = xlFile.add_worksheet('Summary')
     xlOut.write(r, c, "Sorted by Name")
     r += 1
-    xlOut.write(r, c, "Plant")
+    xlOut.write(r, c, "Sample")
     xlOut.write(r, c+1, "% ΣFA")
     xlOut.write(r, c+2, "DW")
     xlOut.write(r, c+3, "18:2/3")
     r += 1
     for l in lineManager.m_lines:
-        for p in l.m_plants:
-            xlOut.write(r, c, p.m_name)
-            xlOut.write(r, c+1, p.m_totalWeightFraction * 100)
-            xlOut.write(r, c+2, p.m_mgFADW)
-            xlOut.write(r, c+3, Get18_2_to_3(p))
+        for s in l.m_samples:
+            xlOut.write(r, c, s.m_name)
+            xlOut.write(r, c+1, s.m_totalWeightFraction * 100)
+            xlOut.write(r, c+2, s.m_mgFADW)
+            xlOut.write(r, c+3, Get18_2_to_3(s))
             r += 1
     r = 0
     c = 5
     xlOut.write(r, c, "Sorted by %FA")
     r += 1
-    xlOut.write(r, c, "Plant")
+    xlOut.write(r, c, "Sample")
     xlOut.write(r, c+1, "% ΣFA")
     xlOut.write(r, c+2, "18:2/3")
     r += 1
-    plants = []
+    samples = []
     for l in lineManager.m_lines:
-        plants += l.m_plants
-    plants.sort(key = lambda p: p.m_totalWeightFraction)
-    for p in plants:
-        xlOut.write(r, c, p.m_name)
-        xlOut.write(r, c+1, p.m_totalWeightFraction * 100)
-        xlOut.write(r, c+2, Get18_2_to_3(p))
+        samples += l.m_samples
+    samples.sort(key = lambda s: s.m_totalWeightFraction)
+    for s in samples:
+        xlOut.write(r, c, s.m_name)
+        xlOut.write(r, c+1, s.m_totalWeightFraction * 100)
+        xlOut.write(r, c+2, Get18_2_to_3(s))
         r+= 1
     r = 0
     c = 9
     xlOut.write(r, c, "Sorted by Ratio")
     r += 1
-    xlOut.write(r, c, "Plant")
+    xlOut.write(r, c, "Sample")
     xlOut.write(r, c+1, "18:2/3")
     xlOut.write(r, c+2, "% ΣFA")
     r += 1
-    plants = []
+    samples = []
     for l in lineManager.m_lines:
-        plants += l.m_plants
-    plants.sort(key = lambda p: Get18_2_to_3(p))
-    for p in plants:
-        xlOut.write(r, c, p.m_name)
-        xlOut.write(r, c+1, Get18_2_to_3(p))
-        xlOut.write(r, c+2, p.m_totalWeightFraction * 100)
+        samples += l.m_samples
+    samples.sort(key = lambda s: Get18_2_to_3(s))
+    for s in samples:
+        xlOut.write(r, c, s.m_name)
+        xlOut.write(r, c+1, Get18_2_to_3(s))
+        xlOut.write(r, c+2, s.m_totalWeightFraction * 100)
         r+= 1
 
     xlOut = xlFile.add_worksheet('Profiles')
@@ -176,27 +176,27 @@ def WriteAnalysis(lineManager, xlsxName):
     c = startC
 
     lineFields = 1
-    plantFields = 2
+    sampleFields = 2
     FAMEFields = 3
 
     xlOut.write(r,c,"Line")
-    xlOut.write(r,c+lineFields,"Plant")
+    xlOut.write(r,c+lineFields,"Sample")
     xlOut.write(r,c+lineFields+1,"% ΣFA")
-    xlOut.write(r,c+lineFields+plantFields,"FAME")
-    xlOut.write(r,c+lineFields+plantFields+1,"% of tissue")
-    xlOut.write(r,c+lineFields+plantFields+2,"% of total FA")
+    xlOut.write(r,c+lineFields+sampleFields,"FAME")
+    xlOut.write(r,c+lineFields+sampleFields+1,"% of tissue")
+    xlOut.write(r,c+lineFields+sampleFields+2,"% of total FA")
     r += 1
 
     for l in lineManager.m_lines:
         xlOut.write(r,c,l.m_name)
-        for p in l.m_plants:
-            xlOut.write(r,c+lineFields,p.m_name)
-            xlOut.write(r,c+lineFields+1,p.m_totalWeightFraction)
-            for f in p.m_fames:
+        for s in l.m_samples:
+            xlOut.write(r,c+lineFields,s.m_name)
+            xlOut.write(r,c+lineFields+1,s.m_totalWeightFraction)
+            for f in s.m_fames:
                 if(f.m_bestMatch):
-                    xlOut.write(r,c+lineFields+plantFields, f.m_name)
-                    xlOut.write(r,c+lineFields+plantFields+1, f.m_percentFA * 100)
-                    xlOut.write(r,c+lineFields+plantFields+2, f.m_percentOfTotalFA * 100)
+                    xlOut.write(r,c+lineFields+sampleFields, f.m_name)
+                    xlOut.write(r,c+lineFields+sampleFields+1, f.m_percentFA * 100)
+                    xlOut.write(r,c+lineFields+sampleFields+2, f.m_percentOfTotalFA * 100)
                     r += 1
 
     # xlOut = xlFile.add_worksheet('Side by Side Ratios')
@@ -206,16 +206,16 @@ def WriteAnalysis(lineManager, xlsxName):
     # xlOut.write(r,c,"18-2 to 18-3")
     # r+= 1
     # xlOut.write(r,c,"Line Name")
-    # xlOut.write(r,c+1,"Plant Name")
+    # xlOut.write(r,c+1,"Sample Name")
     # xlOut.write(r,c+2,"18:2/18:3 (by percentFA)")
     # xlOut.write(r,c+3,"Σ(18:2, 20:0, 22:1)")
     # r+= 1
     # for l in lineManager.m_lines:
     #     xlOut.write(r,c,l.m_name)
-    #     for p in l.m_plants:
-    #         xlOut.write(r,c+lineFields,p.m_name)
-    #         xlOut.write(r,c+lineFields+1,Get18_2_to_3(p))
-    #         xlOut.write(r,c+lineFields+2,Get18_2_and_20_0_and_22_1(p))
+    #     for s in l.m_samples:
+    #         xlOut.write(r,c+lineFields,s.m_name)
+    #         xlOut.write(r,c+lineFields+1,Get18_2_to_3(s))
+    #         xlOut.write(r,c+lineFields+2,Get18_2_and_20_0_and_22_1(s))
     #         r+= 1
 
     # xlOut = xlFile.add_worksheet('Sorted Ratios')
@@ -225,62 +225,62 @@ def WriteAnalysis(lineManager, xlsxName):
     # xlOut.write(r,c,"18-2 to 18-3")
     # r+= 1
     # xlOut.write(r,c,"Line Name")
-    # xlOut.write(r,c+1,"Plant Name")
+    # xlOut.write(r,c+1,"Sample Name")
     # xlOut.write(r,c+2,"18:2/18:3 (by percentFA)")
     # r+= 1
     # for l in lineManager.m_lines:
     #     xlOut.write(r,c,l.m_name)
-    #     plants = l.m_plants
-    #     plants.sort(key = lambda p: Get18_2_to_3(p))
-    #     for p in plants:
-    #         xlOut.write(r,c+lineFields,p.m_name)
-    #         xlOut.write(r,c+lineFields+1,Get18_2_to_3(p))
+    #     samples = l.m_samples
+    #     samples.sort(key = lambda s: Get18_2_to_3(s))
+    #     for s in samples:
+    #         xlOut.write(r,c+lineFields,s.m_name)
+    #         xlOut.write(r,c+lineFields+1,Get18_2_to_3(s))
     #         r+= 1
 
     # xlOut.write(r,c,"Σ(18:2, 20:0, 22:1)")
     # r+= 1
     # xlOut.write(r,c,"Line Name")
-    # xlOut.write(r,c+1,"Plant Name")
+    # xlOut.write(r,c+1,"Sample Name")
     # xlOut.write(r,c+2,"Σ by percentFA")
     # r+= 1
     # for l in lineManager.m_lines:
     #     xlOut.write(r,c,l.m_name)
-    #     plants = l.m_plants
-    #     plants.sort(key = lambda p: Get18_2_and_20_0_and_22_1(p))
-    #     for p in plants:
-    #         xlOut.write(r,c+lineFields,p.m_name)
-    #         xlOut.write(r,c+lineFields+1,Get18_2_and_20_0_and_22_1(p))
+    #     samples = l.m_samples
+    #     samples.sort(key = lambda s: Get18_2_and_20_0_and_22_1(s))
+    #     for s in samples:
+    #         xlOut.write(r,c+lineFields,s.m_name)
+    #         xlOut.write(r,c+lineFields+1,Get18_2_and_20_0_and_22_1(s))
     #         r+= 1
 
-    # xlOut = xlFile.add_worksheet('All Plants by Ratios')
+    # xlOut = xlFile.add_worksheet('All Samples by Ratios')
     # r = 0
     # c = startC
-    # plants = lineManager.GetAllPlants()
+    # samples = lineManager.GetAllSamples()
 
     # xlOut.write(r,startC,"18-2 to 18-3")
     # r+= 1
-    # xlOut.write(r,c,"Plant Name")
+    # xlOut.write(r,c,"Sample Name")
     # xlOut.write(r,c+1,"Line Name")
     # xlOut.write(r,c+2,"18:2/18:3 (by percentFA)")
-    # plants.sort(key = lambda p: Get18_2_to_3(p.m_plant))
+    # samples.sort(key = lambda s: Get18_2_to_3(s.m_sample))
     # r+= 1
-    # for p in plants:
-    #     xlOut.write(r,c,p.m_plant.m_name)
-    #     xlOut.write(r,c+1,p.m_line.m_name)
-    #     xlOut.write(r,c+2,Get18_2_to_3(p.m_plant))
+    # for s in samples:
+    #     xlOut.write(r,c,s.m_sample.m_name)
+    #     xlOut.write(r,c+1,s.m_line.m_name)
+    #     xlOut.write(r,c+2,Get18_2_to_3(s.m_sample))
     #     r+= 1
 
     # xlOut.write(r,startC,"Σ(18:2, 20:0, 22:1)")
     # r+= 1
-    # xlOut.write(r,c,"Plant Name")
+    # xlOut.write(r,c,"Sample Name")
     # xlOut.write(r,c+1,"Line Name")
     # xlOut.write(r,c+2,"Σ by percentFA")
     # r+= 1
-    # plants.sort(key = lambda p: Get18_2_and_20_0_and_22_1(p.m_plant))
-    # for p in plants:
-    #     xlOut.write(r,c,p.m_plant.m_name)
-    #     xlOut.write(r,c+1,p.m_line.m_name)
-    #     xlOut.write(r,c+2,Get18_2_and_20_0_and_22_1(p.m_plant))
+    # samples.sort(key = lambda s: Get18_2_and_20_0_and_22_1(s.m_sample))
+    # for s in samples:
+    #     xlOut.write(r,c,s.m_sample.m_name)
+    #     xlOut.write(r,c+1,s.m_line.m_name)
+    #     xlOut.write(r,c+2,Get18_2_and_20_0_and_22_1(s.m_sample))
     #     r+= 1
 
 

@@ -1,5 +1,5 @@
 
-# Plant Management is the heart of these scripts. This file defines what FAMEs, Plants, Lines, etc. are and what can be done with them.
+# Sample Management is the heart of these scripts. This file defines what FAMEs, Samples, Lines, etc. are and what can be done with them.
 # The only reason this file should be changed is if there are necessary features that must be added.
 
 
@@ -150,7 +150,7 @@ class FAMEsContainer:
         self.m_fames = [f for f in self.m_fames if f not in toRem]
         return toRem
 
-    #Adds all Plants from otherFAMEsContainer to *this.
+    #Adds all Samples from otherFAMEsContainer to *this.
     #If there are duplicate FAMES they are removed here.
     #RETURNS: the FAMEs removed
     def ImportDataFrom(self, otherFAMEsContainer):
@@ -367,8 +367,8 @@ class ExpressionLevel:
         self.m_westernRank = 0
         self.m_westernValue = 0
 
-#A Plant is a TrendIdentifier, a FAMEsContainer, and has an ExpressionLevel.
-class Plant (TrendIdentifier, FAMEsContainer):
+#A Sample is a TrendIdentifier, a FAMEsContainer, and has an ExpressionLevel.
+class Sample (TrendIdentifier, FAMEsContainer):
     m_expressionLevel = ExpressionLevel()
     m_zygosity = ""
     def __init__(self):
@@ -377,50 +377,50 @@ class Plant (TrendIdentifier, FAMEsContainer):
         self.m_expressionLevel = ExpressionLevel()
         self.m_zygosity = ""
 
-#A PlantsContainer is a base class for all objects that contain plants.
-#Currently, PlantsContainers only support access methods to a set of plants.
-class PlantsContainer:
-    m_plants = []
+#A SamplesContainer is a base class for all objects that contain samples.
+#Currently, SamplesContainers only support access methods to a set of samples.
+class SamplesContainer:
+    m_samples = []
     def __init__(self):
-        self.m_plants = []
+        self.m_samples = []
 
-    #Adds a plant to *this
-    def AddPlant(self,plant):
-        plant.m_number = len(self.m_plants)
-        self.m_plants.append(plant)
+    #Adds a sample to *this
+    def AddSample(self,sample):
+        sample.m_number = len(self.m_samples)
+        self.m_samples.append(sample)
 
-    #RETURNS: the plant from *this with the given name or an invalid plant if none found.
-    def GetPlantByName(self, plantName):
-        for p in self.m_plants:
-            if(p.m_name ==plantName):
-                return p
-        ret = Plant()
+    #RETURNS: the sample from *this with the given name or an invalid sample if none found.
+    def GetSampleByName(self, sampleName):
+        for s in self.m_samples:
+            if(s.m_name ==sampleName):
+                return s
+        ret = Sample()
         ret.Invalidate()
         return ret
 
-    #RETURNS: the plant from *this with the given number or an invalid plant if none found.
-    def GetPlantByNumber(self, plantNumber):
-        for p in self.m_plants:
-            if(p.m_number ==plantNumber):
-                return p
-        ret = Plant()
+    #RETURNS: the sample from *this with the given number or an invalid sample if none found.
+    def GetSampleByNumber(self, sampleNumber):
+        for s in self.m_samples:
+            if(s.m_number ==sampleNumber):
+                return s
+        ret = Sample()
         ret.Invalidate()
         return ret
 
-    #Removes all Plants in toRem from *this.
-    #RETURNS: the Plants removed
-    def RemovePlants(self,toRem):
-        self.m_plants = [p for p in self.m_plants if p not in toRem]
+    #Removes all Samples in toRem from *this.
+    #RETURNS: the Samples removed
+    def RemoveSamples(self,toRem):
+        self.m_samples = [s for s in self.m_samples if s not in toRem]
         return toRem
 
-    #Adds all Plants from otherPlantContainer to *this.
+    #Adds all Samples from otherSampleContainer to *this.
     #If there are duplicate FAMES, etc. they are combined here.
-    #RETURNS: excess plants removed
-    def ImportDataFrom(self, otherPlantContainer):
-        self.m_plants.extend(otherPlantContainer.m_plants);
+    #RETURNS: excess samples removed
+    def ImportDataFrom(self, otherSampleContainer):
+        self.m_samples.extend(otherSampleContainer.m_samples);
         toRem = []
         alreadyProcessed = []
-        for p1 in self.m_plants:
+        for p1 in self.m_samples:
             skip = False
             for pp in alreadyProcessed:
                 if(p1.m_name == pp):
@@ -428,22 +428,22 @@ class PlantsContainer:
                     break
             if(skip):
                 continue
-            for p2 in self.m_plants:
+            for p2 in self.m_samples:
                 if(p1 is not p2 and p1.m_name == p2.m_name):
-                    print("Adding data from and removing duplicate plant", p2.m_name)
+                    print("Adding data from and removing duplicate sample", p2.m_name)
                     p1.ImportDataFrom(p2)
                     toRem.append(p2)
                     alreadyProcessed.append(p1.m_name)
-        return self.RemovePlants(toRem)
+        return self.RemoveSamples(toRem)
 
-#A line is a PlantsContainer aswell as a TrendIdentifier and has no other special methods.
-class Line (TrendIdentifier, PlantsContainer):
+#A line is a SamplesContainer aswell as a TrendIdentifier and has no other special methods.
+class Line (TrendIdentifier, SamplesContainer):
     def __init__(self):
-        super(PlantsContainer,self).__init__()
+        super(SamplesContainer,self).__init__()
         super(TrendIdentifier,self).__init__()
 
 #A LineManager contains a set of Lines and is the primary means of interacting with all members within Line objects.
-#For example, if one wanted to change the name of a FAME, they would get the FAME by first asking the LineManager for the appropriate plant, then query the FAME and change its name.
+#For example, if one wanted to change the name of a FAME, they would get the FAME by first asking the LineManager for the appropriate sample, then query the FAME and change its name.
 #A LineManager also assigns a uniqueID to all TrendIdentifiers within it.
 class LineManager:
     m_nextID = 0
@@ -500,25 +500,25 @@ class LineManager:
     def SetUniqueIDs(self):
         for l in self.m_lines:
             l.m_uniqueID = self.GetNextID()
-            for p in l.m_plants:
-                p.m_uniqueID = self.GetNextID()
-                for f in p.m_fames:
+            for s in l.m_samples:
+                s.m_uniqueID = self.GetNextID()
+                for f in s.m_fames:
                     f.m_uniqueID = self.GetNextID()
-                    f.m_number = p.m_uniqueID
+                    f.m_number = s.m_uniqueID
 
-    #Searches through all lines to find a plant of the given name.
-    #RETURNS: the plant from a Line in *this with the given name or an invalid plant if none found.
-    def GetPlantByName(self, plantName):
+    #Searches through all lines to find a sample of the given name.
+    #RETURNS: the sample from a Line in *this with the given name or an invalid sample if none found.
+    def GetSampleByName(self, sampleName):
         for l in self.m_lines:
-            ret = l.GetPlantByName(plantName)
+            ret = l.GetSampleByName(sampleName)
             if(ret.IsValid()):
                 return ret
-        ret = Plant()
+        ret = Sample()
         ret.Invalidate()
         return ret
 
     #Adds all Lines from otherLineManager to *this.
-    #If there are duplicate lines, plants, etc. they are combined here.
+    #If there are duplicate lines, samples, etc. they are combined here.
     #RETURNS: the Lines removed.
     def ImportDataFrom(self, otherLineManager):
         self.m_lines.extend(otherLineManager.m_lines)
@@ -543,44 +543,44 @@ class LineManager:
         return self.RemoveLines(toRem)
 
     #Prints some information on the data in *this.
-    #Currently, these data only include counts of each Line, Plant, and FAME.
+    #Currently, these data only include counts of each Line, Sample, and FAME.
     def Analyze(self):
-        plantCount = 0;
+        sampleCount = 0;
         famesCount = 0;
         unlabeledFamesCount = 0
         for l in self.m_lines:
-            #print("There are",len(l.m_plants),"plants in",l.m_name)
-            plantCount += len(l.m_plants)
-            for p in l.m_plants:
-                #print("There are",len(p.m_fames),"FAMEs in plant", p.m_number, "(",p.m_mgFADW, "mg DW )")
-                famesCount += len(p.m_fames)
+            #print("There are",len(l.m_samples),"samples in",l.m_name)
+            sampleCount += len(l.m_samples)
+            for s in l.m_samples:
+                #print("There are",len(s.m_fames),"FAMEs in sample", s.m_number, "(",s.m_mgFADW, "mg DW )")
+                famesCount += len(s.m_fames)
         print("There are",len(self.m_lines),"lines")
-        print("There are",plantCount,"plants")
+        print("There are",sampleCount,"samples")
         print("There are",famesCount,"fames")
 
-    #Labels all FAMEs within all Plants within all Lines within *this according to the given set of known FAMEs.
+    #Labels all FAMEs within all Samples within all Lines within *this according to the given set of known FAMEs.
     def LabelFAMEsWith(self,labeledFAMEs):
         for l in self.m_lines:
-            for p in l.m_plants:
-                p.ApplyLabelsWithClosestMatchFrom(labeledFAMEs)
-                p.FindBestMatchingFAMEs()
+            for s in l.m_samples:
+                s.ApplyLabelsWithClosestMatchFrom(labeledFAMEs)
+                s.FindBestMatchingFAMEs()
 
-    #Calculates the percent FA for all FAMEs within all Plants within all Lines within *this by comparison with the given standardName.
+    #Calculates the percent FA for all FAMEs within all Samples within all Lines within *this by comparison with the given standardName.
     #REQUIREMENTS:
     #   1. all fames be labeled
-    #   2. the stdName provided matches a FAME within each Plant
-    #   3. m_mgFADW and m_mgStd for each Plant are valid numbers.
-    def CalculatePercentFAForAllPlants(self, standardName):
+    #   2. the stdName provided matches a FAME within each Sample
+    #   3. m_mgFADW and m_mgStd for each Sample are valid numbers.
+    def CalculatePercentFAForAllSamples(self, standardName):
         for l in self.m_lines:
-            for p in l.m_plants:
-                p.CalculatePercentFA(standardName)
+            for s in l.m_samples:
+                s.CalculatePercentFA(standardName)
 
-    #Calculates the percent of total PercentFA for all FAMEs within all Plants within all Lines within *this by comparison with the given standardName.
+    #Calculates the percent of total PercentFA for all FAMEs within all Samples within all Lines within *this by comparison with the given standardName.
     #Requires that each FAME have a valid m_percentFA
-    def CalculatePercentOfTotalFAForAllPlants(self, standardName):
+    def CalculatePercentOfTotalFAForAllSamples(self, standardName):
         for l in self.m_lines:
-            for p in l.m_plants:
-                p.CalculatePercentOfTotalFA(standardName)
+            for s in l.m_samples:
+                s.CalculatePercentOfTotalFA(standardName)
 
     #Removes any FAMEs within *this with a m_percentFA/totalPercentFA lower than lowestPercent or higher than highestPercent.
     #same for value, where value is in percentFA
@@ -588,12 +588,12 @@ class LineManager:
         remT = 0
         for l in self.m_lines:
             remL = 0
-            for p in l.m_plants:
+            for s in l.m_samples:
                 remP = 0
-                remP += len(p.RemoveFAMEsLowerThanPercent(lowestPercent))
-                remP += len(p.RemoveFAMEsHigherThanPercent(highestPercent))
-                remP += len(p.RemoveFAMEsLowerThanPercentFA(lowestValue))
-                remP += len(p.RemoveFAMEsHigherThanPercentFA(highestValue))
+                remP += len(s.RemoveFAMEsLowerThanPercent(lowestPercent))
+                remP += len(s.RemoveFAMEsHigherThanPercent(highestPercent))
+                remP += len(s.RemoveFAMEsLowerThanPercentFA(lowestValue))
+                remP += len(s.RemoveFAMEsHigherThanPercentFA(highestValue))
                 remL += remP
             remT += remL
         print("Removed",remT,"FAMEs")
@@ -601,38 +601,38 @@ class LineManager:
     #Removes all FAMEs within *this that are not local maxima.
     def TrimFAMEsToLocalMaxima(self):
         for l in self.m_lines:
-            for p in l.m_plants:
-                p.TrimFAMEsToLocalMaximaOnly()
+            for s in l.m_samples:
+                s.TrimFAMEsToLocalMaximaOnly()
 
     #Removes all FAMEs within *this that have the name "INVALID NAME"
     def RemoveUnlabeledFAMEs(self):
         for l in self.m_lines:
-            for p in l.m_plants:
-                p.RemoveAllUnlabeledFAMEs()
+            for s in l.m_samples:
+                s.RemoveAllUnlabeledFAMEs()
 
-    #RETURNS: all plants in *this as an array of PlantLinePairs
-    def GetAllPlants(self):
-        allPlants = []
+    #RETURNS: all samples in *this as an array of SampleLinePairs
+    def GetAllSamples(self):
+        allSamples = []
         for l in self.m_lines:
-            for p in l.m_plants:
-                newPair = PlantLinePair()
-                newPair.m_plant = p
+            for s in l.m_samples:
+                newPair = SampleLinePair()
+                newPair.m_sample = s
                 newPair.m_line = l
-                allPlants.append(newPair)
-        return allPlants
+                allSamples.append(newPair)
+        return allSamples
 
-#A FAMEPlantPair is a simple class containing a FAME and a Plant.
-class FAMEPlantPair:
+#A FAMESamplePair is a simple class containing a FAME and a Sample.
+class FAMESamplePair:
     m_fame = FAME()
-    m_plant = Plant()
+    m_sample = Sample()
     def __init__(self):
         self.m_fame = FAME()
-        self.m_plant = Plant()
+        self.m_sample = Sample()
 
-#A PlantLinePair is a simple class containing a Plant and a Line.
-class PlantLinePair:
-    m_plant = Plant()
+#A SampleLinePair is a simple class containing a Sample and a Line.
+class SampleLinePair:
+    m_sample = Sample()
     m_line = Line()
     def __init__(self):
-        self.m_plant = Plant()
+        self.m_sample = Sample()
         self.m_line = Line()

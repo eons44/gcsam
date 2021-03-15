@@ -3,19 +3,20 @@ import os
 import sys
 import xlsxwriter
 import argparse
-from plantManagement import *
-from plantsInExcel import *
+from sampleManagement import *
+from samplesInExcel import *
 from excelHelpers import *
 from graphs import *
 
 descriptionStr = "Welcome to GC SAM, your friendly, neighborhood gas chromatography sample analyzer and manager! Before using GC SAM, please make sure you have a valid Config sheet for the file to be analyzed. See the documentation for more details on what this means."
 
 parser = argparse.ArgumentParser(description = descriptionStr)
-parser.add_argument('-c','--config-file', type = str, metavar = 'config.xlsx',help = 'File containing plant weights, standard weights, and labeled FAMEs', dest = 'configFile')
+parser.add_argument('-c','--config-file', type = str, metavar = 'config.xlsx',help = 'File containing sample weights, standard weights, and labeled FAMEs', dest = 'configFile')
 parser.add_argument('-i', '--input-files', metavar = ('input1.xlsx','input2.xlsx'), type = str, help = 'GC output to be analyzed.', dest = 'iFiles', nargs = '*')
-parser.add_argument('-if', '--input-format', type = str, choices = ['HMS202'], default = 'HMS202', help = 'Format of the GC output to be analyzed.', dest = 'iFileFormat')
+# parser.add_argument('-if', '--input-format', type = str, choices = ['Harper'], default = 'Harper', help = 'Format of the GC output to be analyzed.', dest = 'iFileFormat')
 parser.add_argument('--standard', metavar = 'standardName', type = str, default = 'C17:0', help = 'String identifier of the standard', dest = 'std')
 parser.add_argument('-o', '--output-file', metavar = 'output.xlsx', type = str, help = 'Where to output analyzed data.', dest = 'oFile')
+# parser.add_argument('-of', '--output-format', type = str, choices = ['ZeaKal'], default = 'ZeaKal', help = 'Format of the desired output.', dest = 'oFileFormat')
 parser.add_argument('-s', '--save-file', metavar = 'saveTo.xlsx', type = str, help = 'Save all data for easy access later.', dest = 'saveLoc')
 parser.add_argument('-g', '--graph-folder', metavar = 'graphs', type = str, help = 'Directory to put generated graphs in.', dest = 'gDir')
 parser.add_argument('-e', '--export', metavar = 'exportTo.xlsx', type = str, help = 'Exports limited selection of data in a more consumable format', dest = 'exportLoc')
@@ -54,12 +55,12 @@ if(args.std is None):
 lineManager = LineManager()
 if(args.iFiles is not None):
     for f in args.iFiles:
-        lineManager.ImportDataFrom(ReadPlantsAndFAMEsFrom(f))
+        lineManager.ImportDataFrom(ReadSamplesAndFAMEsFrom(f))
         ApplyConfigTo(args.configFile,lineManager)
         lineManager.LabelFAMEsWith(ReadLabeledFAMEsFrom(args.configFile))
         if(args.std is not None):
-            lineManager.CalculatePercentFAForAllPlants(args.std)
-            lineManager.CalculatePercentOfTotalFAForAllPlants(args.std)
+            lineManager.CalculatePercentFAForAllSamples(args.std)
+            lineManager.CalculatePercentOfTotalFAForAllSamples(args.std)
         lineManager.Analyze()
     print("Removing unlabeled FAMEs")
     lineManager.RemoveUnlabeledFAMEs()
