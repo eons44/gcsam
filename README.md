@@ -59,7 +59,7 @@ Specifying a standard is not required but you will likely want to include it wit
 
 Converting raw GC output to a GCSAM file
 ```
-gcsam -i "gcOutput.xlsx" -f "Harper" -c "configFile.xlsx" -s "savedGCdata.xlsx" --standard "C17:0"
+gcsam -i "gcOutput.xlsx" -if "Harper" -c "configFile.xlsx" -s "savedGCdata.xlsx" --standard "C17:0"
 ```
 
 Removing lines from previously saved files
